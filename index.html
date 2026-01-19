@@ -3,25 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ethereal Star System</title>
+    <title>Gemini Cosmic Orrery</title>
     <style>
-        body { margin: 0; background-color: #020205; overflow: hidden; }
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
         canvas { display: block; }
+        #ui-layer { position: absolute; top: 20px; left: 20px; z-index: 10; }
+        .btn { 
+            display: none; background: rgba(255, 255, 255, 0.1); color: white; 
+            border: 1px solid rgba(255, 255, 255, 0.3); padding: 12px 24px; 
+            border-radius: 30px; cursor: pointer; backdrop-filter: blur(5px); 
+            text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
+        }
+        .btn:hover { background: rgba(255, 255, 255, 0.2); border-color: #fff; }
+        #instruction { position: absolute; bottom: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.5); pointer-events: none; }
     </style>
+
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+          }
+        }
+    </script>
 </head>
 <body>
-    <button id="backButton" style="position: absolute; top: 20px; left: 20px; display: none; padding: 10px 20px; cursor: pointer; z-index: 100;">
-        Back to Sun
-    </button>
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-            "lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.19/+esm"
-        }
-    }
-</script>
-    <script type="module" src="main.js"></script>
+
+    <div id="ui-layer">
+        <button id="backButton" class="btn">Return to Sun</button>
+    </div>
+
+    <div id="instruction">CLICK A PLANET TO OBSERVE</div>
+
+    <script type="module" src="./main.js"></script>
 </body>
 </html>
