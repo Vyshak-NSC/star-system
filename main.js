@@ -36,13 +36,13 @@ scene.add(sunGroup);
 const sunCore = new THREE.Mesh(new THREE.SphereGeometry(2, 64, 64), new THREE.MeshBasicMaterial({ color: 0xffffff }));
 sunGroup.add(sunCore);
 
-const createHalo = (size, color, opacity) => {
-    const mat = new THREE.SpriteMaterial({ map: glowMap, color, transparent: true, blending: THREE.AdditiveBlending, opacity, depthWrite: false });
-    const sprite = new THREE.Sprite(mat);
-    sprite.scale.set(size, size, 1);
-    return sprite;
-};
-// sunmGroup.add(createHalo(7, 0xffcc88, 0.9), createHalo(18, 0xffaa00, 0.4), createHalo(50, 0xff7700, 0.15));
+// const createHalo = (size, color, opacity) => {
+//     const mat = new THREE.SpriteMaterial({ map: glowMap, color, transparent: true, blending: THREE.AdditiveBlending, opacity, depthWrite: false });
+//     const sprite = new THREE.Sprite(mat);
+//     sprite.scale.set(size, size, 1);
+//     return sprite;
+// };
+// sunGroup.add(createHalo(7, 0xffcc88, 0.9), createHalo(18, 0xffaa00, 0.4), createHalo(50, 0xff7700, 0.15));
 
 // --- STAR DUST ---
 const starCount = 15000;
@@ -164,4 +164,5 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
 });
+
 
