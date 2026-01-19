@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethereal Star System</title>
+    <style>
+        body { margin: 0; background-color: #020205; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <button id="backButton" style="position: absolute; top: 20px; left: 20px; display: none; padding: 10px 20px; cursor: pointer; z-index: 100;">
+        Back to Sun
+    </button>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+            "lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.19/+esm"
+        }
+    }
+</script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
