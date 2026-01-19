@@ -42,7 +42,7 @@ const createHalo = (size, color, opacity) => {
     sprite.scale.set(size, size, 1);
     return sprite;
 };
-sunGroup.add(createHalo(7, 0xffcc88, 0.9), createHalo(18, 0xffaa00, 0.4), createHalo(50, 0xff7700, 0.15));
+// sunGroup.add(createHalo(7, 0xffcc88, 0.9), createHalo(18, 0xffaa00, 0.4), createHalo(50, 0xff7700, 0.15));
 
 // --- STAR DUST ---
 const starCount = 15000;
