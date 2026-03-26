@@ -4,755 +4,734 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>star_sim — N-Body Gravitational Simulator</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #080c14; --panel: #0d1420; --panel2: #0a111c;
+  --border: #1a2540; --border2: #243050;
+  --accent: #3b82f6; --accent2: #06b6d4; --warn: #f59e0b;
+  --green: #22c55e; --red: #ef4444; --pink: #ec4899; --purple: #a78bfa;
+  --text: #e2e8f0; --muted: #64748b;
+  --mono: 'Space Mono', monospace; --sans: 'Syne', sans-serif;
+}
+html, body { width:100%; height:100%; background:var(--bg); color:var(--text); font-family:var(--sans); overflow:hidden; }
+#app { display:grid; grid-template-columns:280px 1fr; grid-template-rows:44px 1fr; height:100vh; }
 
-  :root {
-    --bg:        #080c14;
-    --panel:     #0d1420;
-    --border:    #1a2540;
-    --accent:    #3b82f6;
-    --accent2:   #06b6d4;
-    --warn:      #f59e0b;
-    --text:      #e2e8f0;
-    --muted:     #64748b;
-    --mono:      'Space Mono', monospace;
-    --sans:      'Syne', sans-serif;
-  }
+/* HEADER */
+#header { grid-column:1/-1; display:flex; align-items:center; gap:14px; padding:0 18px; border-bottom:1px solid var(--border); background:var(--panel); }
+#header h1 { font-size:15px; font-weight:800; letter-spacing:.08em; color:var(--accent); }
+#header .sep { color:var(--muted); }
+#header .subtitle { font-family:var(--mono); font-size:10px; color:var(--muted); }
+#header .tag { margin-left:auto; font-family:var(--mono); font-size:9px; color:var(--accent2); border:1px solid var(--accent2); padding:2px 8px; border-radius:2px; letter-spacing:.08em; }
 
-  html, body {
-    width: 100%; height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    overflow: hidden;
-  }
+/* SIDEBAR */
+#sidebar { background:var(--panel); border-right:1px solid var(--border); overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:14px; }
+.sec-label { font-family:var(--mono); font-size:9px; letter-spacing:.12em; color:var(--muted); text-transform:uppercase; margin-bottom:7px; border-bottom:1px solid var(--border); padding-bottom:5px; }
 
-  /* ── LAYOUT ── */
-  #app {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    grid-template-rows: 48px 1fr;
-    height: 100vh;
-  }
+.preset-btn { display:block; width:100%; padding:7px 10px; margin-bottom:5px; background:transparent; border:1px solid var(--border); color:var(--text); font-family:var(--sans); font-size:12px; font-weight:700; text-align:left; cursor:pointer; border-radius:4px; transition:all .15s; }
+.preset-btn:hover, .preset-btn.active { border-color:var(--accent); color:var(--accent); background:#1a2540; }
+.preset-btn .desc { display:block; font-family:var(--mono); font-size:9px; color:var(--muted); font-weight:400; margin-top:2px; }
 
-  /* ── HEADER ── */
-  #header {
-    grid-column: 1 / -1;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--border);
-    background: var(--panel);
-  }
-  #header h1 {
-    font-size: 15px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    color: var(--accent);
-  }
-  #header .sep { color: var(--muted); }
-  #header .subtitle {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.04em;
-  }
-  #header .tag {
-    margin-left: auto;
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--accent2);
-    border: 1px solid var(--accent2);
-    padding: 2px 8px;
-    border-radius: 2px;
-    letter-spacing: 0.08em;
-  }
+.btn { padding:5px 11px; border-radius:3px; border:1px solid var(--border); background:transparent; color:var(--text); font-family:var(--mono); font-size:10px; cursor:pointer; transition:all .15s; letter-spacing:.03em; white-space:nowrap; }
+.btn:hover { border-color:var(--accent); color:var(--accent); }
+.btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+.btn.primary:hover { background:#2563eb; }
+.btn.success { background:var(--green); border-color:var(--green); color:#fff; }
+.btn.success:hover { background:#16a34a; }
+.btn.warn { border-color:var(--warn); color:var(--warn); }
+.btn.warn:hover { background:#f59e0b22; }
+.btn.danger { border-color:var(--red); color:var(--red); }
+.btn.danger:hover { background:#ef444422; }
+.btn.sm { padding:3px 8px; font-size:9px; }
+.btn.fork-col { border-color:var(--pink); color:var(--pink); }
+.btn.fork-col:hover { background:#ec489922; }
+.controls { display:flex; gap:5px; flex-wrap:wrap; }
 
-  /* ── SIDEBAR ── */
-  #sidebar {
-    background: var(--panel);
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 16px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
+.slider-row { display:flex; align-items:center; gap:8px; }
+.slider-label { font-family:var(--mono); font-size:9px; color:var(--muted); min-width:44px; }
+input[type=range] { flex:1; accent-color:var(--accent); height:2px; }
+.slider-val { font-family:var(--mono); font-size:9px; color:var(--accent); min-width:28px; text-align:right; }
 
-  .section-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 6px;
-  }
+.step-display { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--accent); }
+.step-sub { font-family:var(--mono); font-size:9px; color:var(--muted); margin-top:2px; }
 
-  /* Preset buttons */
-  .preset-btn {
-    display: block;
-    width: 100%;
-    padding: 8px 12px;
-    margin-bottom: 6px;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 700;
-    text-align: left;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.15s;
-  }
-  .preset-btn:hover { border-color: var(--accent); color: var(--accent); background: #1a2540; }
-  .preset-btn.active { border-color: var(--accent); color: var(--accent); background: #1a2540; }
-  .preset-btn .desc {
-    display: block;
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    font-weight: 400;
-    margin-top: 3px;
-  }
+.diag-grid { display:grid; gap:6px; }
+.diag-item { background:#0a1020; border:1px solid var(--border); border-radius:4px; padding:7px 9px; }
+.diag-key { font-family:var(--mono); font-size:8px; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom:2px; }
+.diag-val { font-family:var(--mono); font-size:12px; color:var(--accent2); font-weight:700; }
+.diag-val.stable { color:var(--green); }
+.diag-val.drifting { color:var(--warn); }
 
-  /* Controls */
-  .controls {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .btn {
-    padding: 6px 14px;
-    border-radius: 3px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 10px;
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 0.04em;
-  }
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .btn.primary:hover { background: #2563eb; }
-  .btn.danger { border-color: #ef4444; color: #ef4444; }
-  .btn.danger:hover { background: #ef444422; }
+/* Timeline bar */
+#timeline-bar { width:100%; height:6px; background:var(--border2); border-radius:3px; cursor:pointer; position:relative; margin-bottom:6px; }
+#timeline-fill { height:100%; background:var(--accent); border-radius:3px; pointer-events:none; }
+#timeline-head { position:absolute; top:50%; transform:translate(-50%,-50%); width:12px; height:12px; border-radius:50%; background:var(--accent); border:2px solid #fff; pointer-events:none; }
+.tl-info { font-family:var(--mono); font-size:9px; color:var(--muted); margin-bottom:6px; }
+.tl-controls { display:flex; gap:5px; flex-wrap:wrap; }
 
-  /* Speed slider */
-  .slider-row { display: flex; align-items: center; gap: 10px; }
-  .slider-label { font-family: var(--mono); font-size: 9px; color: var(--muted); min-width: 50px; }
-  input[type=range] {
-    flex: 1;
-    accent-color: var(--accent);
-    height: 2px;
-  }
-  .slider-val { font-family: var(--mono); font-size: 9px; color: var(--accent); min-width: 30px; text-align: right; }
+.body-item { display:flex; align-items:center; gap:7px; padding:4px 0; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:10px; }
+.body-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.body-name { color:var(--text); flex:1; }
+.body-mass { color:var(--muted); }
 
-  /* Diagnostics */
-  .diag-grid {
-    display: grid;
-    gap: 8px;
-  }
-  .diag-item {
-    background: #0a1020;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 8px 10px;
-  }
-  .diag-key {
-    font-family: var(--mono);
-    font-size: 8px;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 3px;
-  }
-  .diag-val {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--accent2);
-    font-weight: 700;
-  }
-  .diag-val.stable { color: #22c55e; }
-  .diag-val.drifting { color: var(--warn); }
+.fork-item { display:flex; align-items:center; gap:7px; padding:4px 0; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:10px; }
+.fork-dot { width:8px; height:8px; border-radius:50%; background:var(--pink); flex-shrink:0; }
+.fork-step-label { flex:1; color:var(--text); font-size:9px; }
 
-  /* Body list */
-  .body-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 0;
-    border-bottom: 1px solid var(--border);
-    font-family: var(--mono);
-    font-size: 10px;
-  }
-  .body-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .body-name { color: var(--text); flex: 1; }
-  .body-mass { color: var(--muted); }
+.tech-note { font-family:var(--mono); font-size:9px; color:#2a3a55; line-height:1.7; border-top:1px solid var(--border); padding-top:8px; margin-top:auto; }
+.tech-note span { color:var(--muted); }
 
-  /* Step counter */
-  .step-display {
-    font-family: var(--mono);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 0.04em;
-  }
-  .step-sub {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
+/* CANVAS */
+#canvas-wrap { position:relative; overflow:hidden; background:var(--bg); }
+canvas { display:block; width:100%; height:100%; }
+#notes { position:absolute; bottom:14px; right:14px; font-family:var(--mono); font-size:9px; color:var(--muted); text-align:right; line-height:1.7; pointer-events:none; }
+#fork-label { position:absolute; top:14px; left:14px; font-family:var(--mono); font-size:10px; color:var(--pink); display:none; }
 
-  /* ── CANVAS AREA ── */
-  #canvas-wrap {
-    position: relative;
-    overflow: hidden;
-    background: var(--bg);
-  }
-  canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
+#toast { position:absolute; top:14px; left:50%; transform:translateX(-50%); background:var(--accent); color:#fff; font-family:var(--mono); font-size:10px; padding:5px 14px; border-radius:3px; opacity:0; pointer-events:none; transition:opacity .3s; white-space:nowrap; z-index:10; }
+#toast.show { opacity:1; }
 
-  /* Notes overlay */
-  #notes {
-    position: absolute;
-    bottom: 16px;
-    right: 16px;
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    text-align: right;
-    line-height: 1.7;
-    pointer-events: none;
-  }
+/* MODAL */
+.modal-overlay { position:fixed; inset:0; background:#000b; display:flex; align-items:center; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity .2s; }
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal { background:var(--panel); border:1px solid var(--border2); border-radius:8px; padding:22px; width:580px; max-width:96vw; max-height:88vh; overflow-y:auto; }
+.modal h2 { font-size:16px; font-weight:800; color:var(--accent); margin-bottom:3px; }
+.modal .modal-sub { font-family:var(--mono); font-size:10px; color:var(--muted); margin-bottom:16px; }
+.modal-sec { margin-bottom:16px; }
+.modal-sec-title { font-family:var(--mono); font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px; border-bottom:1px solid var(--border); padding-bottom:4px; }
+.modal-footer { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; border-top:1px solid var(--border); padding-top:12px; }
 
-  /* Fork toast */
-  #toast {
-    position: absolute;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--accent);
-    color: #fff;
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 6px 16px;
-    border-radius: 3px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-    white-space: nowrap;
-  }
-  #toast.show { opacity: 1; }
+#custom-body-table { width:100%; border-collapse:collapse; margin-bottom:10px; }
+#custom-body-table th { font-family:var(--mono); font-size:9px; color:var(--muted); text-transform:uppercase; padding:4px 5px; text-align:left; border-bottom:1px solid var(--border); }
+#custom-body-table td { padding:3px 3px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.ci { width:100%; background:var(--bg); border:1px solid var(--border2); color:var(--text); font-family:var(--mono); font-size:11px; padding:4px 5px; border-radius:3px; outline:none; transition:border-color .15s; }
+.ci:focus { border-color:var(--accent); }
+.color-swatch { width:22px; height:22px; border-radius:3px; cursor:pointer; border:1px solid var(--border2); }
 
-  /* Tech note at bottom of sidebar */
-  .tech-note {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: #2a3a55;
-    line-height: 1.7;
-    border-top: 1px solid var(--border);
-    padding-top: 10px;
-    margin-top: auto;
-  }
-  .tech-note span { color: var(--muted); }
+.orbit-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px; }
+.field-group label { font-family:var(--mono); font-size:9px; color:var(--muted); display:block; margin-bottom:4px; }
+.orbit-result { background:var(--bg); border:1px solid var(--border2); border-radius:4px; padding:10px 12px; font-family:var(--mono); font-size:11px; display:none; }
+.orbit-result.show { display:block; }
+.orbit-result .res-label { color:var(--muted); font-size:9px; margin-bottom:4px; }
+.orbit-result .res-val { font-size:18px; font-weight:700; color:var(--green); }
+.orbit-result .res-note { font-size:9px; color:var(--muted); margin-top:6px; line-height:1.6; }
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- HEADER -->
   <header id="header">
-    <h1>star_sim</h1>
-    <span class="sep">/</span>
+    <h1>star_sim</h1><span class="sep">/</span>
     <span class="subtitle">deterministic n-body gravitational simulator</span>
     <span class="tag">DEMO</span>
   </header>
 
-  <!-- SIDEBAR -->
   <aside id="sidebar">
 
     <div>
-      <div class="section-label">Presets</div>
-      <button class="preset-btn active" data-preset="sunplanet" onclick="loadPreset('sunplanet',this)">
-        Sun + Planet
-        <span class="desc">Stable orbit, 2 bodies</span>
-      </button>
-      <button class="preset-btn" data-preset="binary" onclick="loadPreset('binary',this)">
-        Binary Star
-        <span class="desc">Equal-mass pair, mutual orbit</span>
-      </button>
-      <button class="preset-btn" data-preset="figure8" onclick="loadPreset('figure8',this)">
-        Figure-8
-        <span class="desc">Choreography solution, 3 bodies</span>
-      </button>
-      <button class="preset-btn" data-preset="chaos" onclick="loadPreset('chaos',this)">
-        Chaos
-        <span class="desc">5-body unstable system</span>
-      </button>
+      <div class="sec-label">Presets</div>
+      <button class="preset-btn active" data-preset="sunplanet" onclick="loadPreset('sunplanet',this)">Sun + Planet<span class="desc">Stable Keplerian orbit</span></button>
+      <button class="preset-btn" data-preset="binary" onclick="loadPreset('binary',this)">Binary Star<span class="desc">Equal-mass mutual orbit</span></button>
+      <button class="preset-btn" data-preset="figure8" onclick="loadPreset('figure8',this)">Figure-8<span class="desc">3-body choreography</span></button>
+      <button class="preset-btn" data-preset="chaos" onclick="loadPreset('chaos',this)">Chaos<span class="desc">5-body unstable system</span></button>
+      <button class="btn" style="width:100%;margin-top:4px" onclick="openCustomModal()">＋ Custom Setup</button>
     </div>
 
     <div>
-      <div class="section-label">Simulation</div>
-      <div style="margin-bottom:10px">
+      <div class="sec-label">Simulation</div>
+      <div style="margin-bottom:9px">
         <div class="step-display" id="step-display">0</div>
-        <div class="step-sub">step  ·  t = <span id="time-display">0.00</span></div>
+        <div class="step-sub">step &nbsp;·&nbsp; t = <span id="time-display">0.00</span></div>
       </div>
-      <div class="controls" style="margin-bottom:10px">
+      <div class="controls" style="margin-bottom:9px">
         <button class="btn primary" id="playbtn" onclick="togglePlay()">▶ PLAY</button>
         <button class="btn" onclick="stepOnce()">STEP</button>
         <button class="btn danger" onclick="resetSim()">RESET</button>
       </div>
       <div class="slider-row">
         <span class="slider-label">Speed</span>
-        <input type="range" min="1" max="100" value="20" id="speed-slider" oninput="updateSpeed(this.value)">
+        <input type="range" min="1" max="80" value="20" id="speed-slider" oninput="updateSpeed(this.value)">
         <span class="slider-val" id="speed-val">20×</span>
       </div>
     </div>
 
     <div>
-      <div class="section-label">Diagnostics</div>
+      <div class="sec-label">Timeline</div>
+      <div class="tl-info">History: <span id="tl-history">1</span> states &nbsp;·&nbsp; head: step <span id="tl-head">0</span></div>
+      <div style="position:relative">
+        <div id="timeline-bar" onclick="timelineClick(event)">
+          <div id="timeline-fill" style="width:0%"></div>
+          <div id="timeline-head" style="left:0%"></div>
+        </div>
+      </div>
+      <div class="tl-controls">
+        <button class="btn warn" onclick="doRewind()">⏮ REWIND</button>
+        <button class="btn fork-col" onclick="doFork()">⑂ FORK</button>
+      </div>
+      <div id="fork-list" style="margin-top:8px"></div>
+    </div>
+
+    <div>
+      <div class="sec-label">Diagnostics</div>
       <div class="diag-grid">
-        <div class="diag-item">
-          <div class="diag-key">Total Energy (E)</div>
-          <div class="diag-val" id="diag-energy">—</div>
-        </div>
-        <div class="diag-item">
-          <div class="diag-key">ΔE / E₀  (drift)</div>
-          <div class="diag-val" id="diag-drift">—</div>
-        </div>
-        <div class="diag-item">
-          <div class="diag-key">|Momentum|</div>
-          <div class="diag-val" id="diag-momentum">—</div>
-        </div>
+        <div class="diag-item"><div class="diag-key">Total Energy</div><div class="diag-val" id="diag-energy">—</div></div>
+        <div class="diag-item"><div class="diag-key">ΔE drift</div><div class="diag-val" id="diag-drift">—</div></div>
+        <div class="diag-item"><div class="diag-key">|Momentum|</div><div class="diag-val" id="diag-momentum">—</div></div>
       </div>
     </div>
 
     <div>
-      <div class="section-label">Bodies</div>
+      <div class="sec-label">Bodies</div>
       <div id="body-list"></div>
     </div>
 
-    <div class="tech-note">
-      <span>Engine mirrors Python backend exactly:</span><br>
-      Velocity Verlet · G=1.0 · dt=0.01<br>
-      Force softening ε=0.1<br>
-      <span>Trails = position history buffer</span>
-    </div>
+    <div class="tech-note"><span>Mirrors Python backend exactly:</span><br>Velocity Verlet · G=1.0 · dt=0.01<br>Softening ε=0.1 · Full history stored</div>
 
   </aside>
 
-  <!-- CANVAS -->
   <div id="canvas-wrap">
     <canvas id="c"></canvas>
-    <div id="notes">
-      scroll to zoom · drag to pan
-    </div>
+    <div id="fork-label"></div>
+    <div id="notes">scroll to zoom · drag to pan<br>click timeline bar to scrub</div>
     <div id="toast"></div>
   </div>
+</div>
 
+<!-- CUSTOM SETUP MODAL -->
+<div class="modal-overlay" id="custom-modal">
+  <div class="modal">
+    <h2>Custom Setup</h2>
+    <div class="modal-sub">Define bodies, then use the orbital velocity calculator before launching.</div>
+
+    <div class="modal-sec">
+      <div class="modal-sec-title">Bodies</div>
+      <table id="custom-body-table">
+        <thead><tr><th>Col</th><th>ID</th><th>Mass</th><th>X</th><th>Y</th><th>Vx</th><th>Vy</th><th></th></tr></thead>
+        <tbody id="custom-body-rows"></tbody>
+      </table>
+      <button class="btn success sm" onclick="addCustomRow()">＋ Add Body</button>
+    </div>
+
+    <div class="modal-sec">
+      <div class="modal-sec-title">Orbital Velocity Calculator &nbsp;<span style="color:var(--accent2);font-size:9px">v = √(G·M / r)</span></div>
+      <p style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.6">
+        For a body in circular orbit around a central mass M at radius r, the exact required tangential velocity is shown below. Enter the values and copy the result into the Vx or Vy field above.
+      </p>
+      <div class="orbit-grid">
+        <div class="field-group"><label>Central mass M</label><input class="ci" id="orb-mass" type="number" value="1000" min="0.001" step="any" oninput="calcOrbit()"></div>
+        <div class="field-group"><label>Orbital radius r</label><input class="ci" id="orb-radius" type="number" value="10" min="0.001" step="any" oninput="calcOrbit()"></div>
+      </div>
+      <div class="orbit-result" id="orbit-result">
+        <div class="res-label">Required circular orbit velocity</div>
+        <div class="res-val" id="orbit-val">—</div>
+        <div class="res-note" id="orbit-note"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeCustomModal()">Cancel</button>
+      <button class="btn primary" onclick="launchCustom()">▶ Launch</button>
+    </div>
+  </div>
 </div>
 
 <script>
 // ═══════════════════════════════════════════
-//  PHYSICS ENGINE  (mirrors Python exactly)
+//  PHYSICS ENGINE  — exact mirror of Python
 // ═══════════════════════════════════════════
+const G = 1.0, DT = 0.01, EPSILON = 0.1;
 
-const G = 1.0;
-const DT = 0.01;
-const EPSILON = 0.1;
-
-function gravitationalForce(b1, b2) {
-  const rx = b2.x - b1.x, ry = b2.y - b1.y;
-  const r2 = rx*rx + ry*ry;
-  const softened = Math.sqrt(r2 + EPSILON*EPSILON);
-  if (softened === 0) return {x:0, y:0};
-  const fm = G * b1.mass * b2.mass / (softened * softened);
-  const fd = 1 / softened;
-  return { x: rx * fd * fm, y: ry * fd * fm };
+function gravForce(b1, b2) {
+  const rx = b2.x-b1.x, ry = b2.y-b1.y;
+  const s = Math.sqrt(rx*rx + ry*ry + EPSILON*EPSILON);
+  if (s===0) return {x:0,y:0};
+  const fm = G*b1.mass*b2.mass/(s*s), fd = 1/s;
+  return {x: rx*fd*fm, y: ry*fd*fm};
 }
 
-function computeAcceleration(bodies) {
+function computeAcc(bodies) {
   const acc = {};
   for (const id1 in bodies) {
-    let fx = 0, fy = 0;
-    const b1 = bodies[id1];
+    let fx=0, fy=0; const b1=bodies[id1];
     for (const id2 in bodies) {
-      if (id1 === id2) continue;
-      const f = gravitationalForce(b1, bodies[id2]);
-      fx += f.x; fy += f.y;
+      if (id1===id2) continue;
+      const f=gravForce(b1,bodies[id2]); fx+=f.x; fy+=f.y;
     }
-    acc[id1] = { x: fx / b1.mass, y: fy / b1.mass };
+    acc[id1] = {x:fx/b1.mass, y:fy/b1.mass};
   }
   return acc;
 }
 
-// Velocity Verlet — exact mirror of Python update()
+// Velocity Verlet — mirrors Python update()
 function verletStep(state) {
-  const { bodies, step, time } = state;
-  const a0 = computeAcceleration(bodies);
-
-  // Step 1: update positions
-  const newPos = {};
+  const {bodies,step,time} = state;
+  const a0 = computeAcc(bodies);
+  const np = {};
   for (const id in bodies) {
-    const b = bodies[id];
-    newPos[id] = {
-      x: b.x + b.vx * DT + a0[id].x * 0.5 * DT * DT,
-      y: b.y + b.vy * DT + a0[id].y * 0.5 * DT * DT,
-    };
+    const b=bodies[id];
+    np[id] = {x: b.x+b.vx*DT+a0[id].x*0.5*DT*DT, y: b.y+b.vy*DT+a0[id].y*0.5*DT*DT};
   }
-
-  // Step 2: compute acceleration at new positions
-  const tempBodies = {};
+  const tmp = {};
+  for (const id in bodies) tmp[id] = {...bodies[id], x:np[id].x, y:np[id].y};
+  const a1 = computeAcc(tmp);
+  const nb = {};
   for (const id in bodies) {
-    const b = bodies[id];
-    tempBodies[id] = { ...b, x: newPos[id].x, y: newPos[id].y };
+    const b=bodies[id];
+    nb[id] = {...b, x:np[id].x, y:np[id].y,
+      vx: b.vx+(a0[id].x+a1[id].x)*0.5*DT,
+      vy: b.vy+(a0[id].y+a1[id].y)*0.5*DT};
   }
-  const a1 = computeAcceleration(tempBodies);
-
-  // Step 3: update velocities
-  const newBodies = {};
-  for (const id in bodies) {
-    const b = bodies[id];
-    newBodies[id] = {
-      ...b,
-      x:  newPos[id].x,
-      y:  newPos[id].y,
-      vx: b.vx + (a0[id].x + a1[id].x) * 0.5 * DT,
-      vy: b.vy + (a0[id].y + a1[id].y) * 0.5 * DT,
-    };
-  }
-
-  return { bodies: newBodies, step: step + 1, time: time + DT };
+  return {bodies:nb, step:step+1, time:time+DT};
 }
 
-// Diagnostics
-function kineticEnergy(bodies) {
-  let e = 0;
-  for (const id in bodies) {
-    const b = bodies[id];
-    e += 0.5 * b.mass * (b.vx*b.vx + b.vy*b.vy);
+function KE(b){let e=0; for(const id in b){const bo=b[id]; e+=0.5*bo.mass*(bo.vx**2+bo.vy**2);} return e;}
+function PE(b){
+  let e=0; const ids=Object.keys(b);
+  for(let i=0;i<ids.length;i++) for(let j=i+1;j<ids.length;j++){
+    const a=b[ids[i]],bb=b[ids[j]];
+    e-=G*a.mass*bb.mass/Math.sqrt((bb.x-a.x)**2+(bb.y-a.y)**2+EPSILON*EPSILON);
   }
   return e;
 }
+const totalE = b => KE(b)+PE(b);
+function momMag(b){let px=0,py=0; for(const id in b){const bo=b[id]; px+=bo.mass*bo.vx; py+=bo.mass*bo.vy;} return Math.sqrt(px*px+py*py);}
 
-function potentialEnergy(bodies) {
-  let e = 0;
-  const ids = Object.keys(bodies);
-  for (let i = 0; i < ids.length; i++) {
-    for (let j = i+1; j < ids.length; j++) {
-      const a = bodies[ids[i]], b = bodies[ids[j]];
-      const dx = b.x - a.x, dy = b.y - a.y;
-      const r = Math.sqrt(dx*dx + dy*dy + EPSILON*EPSILON);
-      e -= G * a.mass * b.mass / r;
-    }
-  }
-  return e;
+// ═══════════════════════════════════════════
+//  TIMELINE CLASS — mirrors timeline.py
+// ═══════════════════════════════════════════
+const MAX_HISTORY = 6000;
+
+function deepCopyState(s) {
+  const bodies={};
+  for(const id in s.bodies) bodies[id]={...s.bodies[id]};
+  return {bodies, step:s.step, time:s.time};
 }
 
-function totalEnergy(bodies) { return kineticEnergy(bodies) + potentialEnergy(bodies); }
-
-function totalMomentumMag(bodies) {
-  let px = 0, py = 0;
-  for (const id in bodies) {
-    const b = bodies[id]; px += b.mass * b.vx; py += b.mass * b.vy;
+class Timeline {
+  constructor(initialState, label=null, forkStep=null) {
+    this.states = [deepCopyState(initialState)];
+    this.label = label;
+    this.forkStep = forkStep;
   }
-  return Math.sqrt(px*px + py*py);
+  step() {
+    const next = verletStep(this.states[this.states.length-1]);
+    this.states.push(next);
+    if (this.states.length > MAX_HISTORY) this.states.shift();
+  }
+  head() { return this.states[this.states.length-1]; }
+  minStep() { return this.states[0].step; }
+  maxStep() { return this.states[this.states.length-1].step; }
+  // Rewind to step — mirrors Python rewind(step)
+  rewind(targetStep) {
+    const idx = this.states.findIndex(s => s.step >= targetStep);
+    if (idx < 0) return false;
+    this.states = this.states.slice(0, idx+1);
+    return true;
+  }
+  // Fork at step — mirrors Python fork(step)
+  fork(targetStep) {
+    const s = this.states.find(s => s.step <= targetStep) ||
+              this.states.reduce((best,s) => Math.abs(s.step-targetStep)<Math.abs(best.step-targetStep)?s:best);
+    if (!s) return null;
+    return new Timeline(s, null, s.step);
+  }
 }
 
 // ═══════════════════════════════════════════
 //  PRESETS
 // ═══════════════════════════════════════════
-
-const COLORS = ['#3b82f6','#f59e0b','#22c55e','#ec4899','#a78bfa','#06b6d4'];
+const PALETTE = ['#f59e0b','#3b82f6','#22c55e','#ec4899','#a78bfa','#06b6d4','#f97316','#e11d48'];
 
 const PRESETS = {
-  sunplanet: {
-    bodies: {
-      sun:    { id:'sun',    mass:1000, x:0,   y:0,   vx:0,   vy:0,   color:'#f59e0b' },
-      planet: { id:'planet', mass:1,    x:10,  y:0,   vx:0,   vy:10,  color:'#3b82f6' },
-    }
-  },
-  binary: {
-    bodies: {
-      starA: { id:'starA', mass:500, x:-8,  y:0,   vx:0,   vy:-5,  color:'#f59e0b' },
-      starB: { id:'starB', mass:500, x:8,   y:0,   vx:0,   vy:5,   color:'#06b6d4' },
-    }
-  },
-  // Chenciner & Montgomery figure-8 (scaled for our units)
-  figure8: {
-    bodies: {
-      a: { id:'a', mass:100, x:-9.7, y:0,    vx: 4.662, vy: 4.335, color:'#3b82f6' },
-      b: { id:'b', mass:100, x: 9.7, y:0,    vx: 4.662, vy: 4.335, color:'#22c55e' },
-      c: { id:'c', mass:100, x: 0,   y:0,    vx:-9.324, vy:0,      color:'#ec4899' },
-    }
-  },
-  chaos: {
-    bodies: {
-      a: { id:'a', mass:300, x: 0,   y: 0,   vx: 0,    vy: 0,    color:'#f59e0b' },
-      b: { id:'b', mass:50,  x: 15,  y: 2,   vx: 0,    vy: 8,    color:'#3b82f6' },
-      c: { id:'c', mass:80,  x:-12,  y: 5,   vx: 2,    vy:-7,    color:'#22c55e' },
-      d: { id:'d', mass:30,  x: 3,   y:-18,  vx:-6,    vy: 3,    color:'#ec4899' },
-      e: { id:'e', mass:60,  x:-8,   y: 12,  vx: 5,    vy: 2,    color:'#a78bfa' },
-    }
-  }
+  sunplanet: {bodies:{
+    sun:    {id:'sun',    mass:1000,x:0,   y:0, vx:0, vy:0,  color:'#f59e0b'},
+    planet: {id:'planet',mass:1,   x:10,  y:0, vx:0, vy:10, color:'#3b82f6'},
+  }},
+  binary: {bodies:{
+    starA: {id:'starA',mass:500,x:-8,y:0,vx:0,vy:-5,color:'#f59e0b'},
+    starB: {id:'starB',mass:500,x:8, y:0,vx:0,vy:5, color:'#06b6d4'},
+  }},
+  figure8: {bodies:{
+    a: {id:'a',mass:100,x:-9.7,y:0,vx:4.662, vy:4.335, color:'#3b82f6'},
+    b: {id:'b',mass:100,x:9.7, y:0,vx:4.662, vy:4.335, color:'#22c55e'},
+    c: {id:'c',mass:100,x:0,   y:0,vx:-9.324,vy:0,     color:'#ec4899'},
+  }},
+  chaos: {bodies:{
+    a: {id:'a',mass:300,x:0,  y:0,  vx:0, vy:0, color:'#f59e0b'},
+    b: {id:'b',mass:50, x:15, y:2,  vx:0, vy:8, color:'#3b82f6'},
+    c: {id:'c',mass:80, x:-12,y:5,  vx:2, vy:-7,color:'#22c55e'},
+    d: {id:'d',mass:30, x:3,  y:-18,vx:-6,vy:3, color:'#ec4899'},
+    e: {id:'e',mass:60, x:-8, y:12, vx:5, vy:2, color:'#a78bfa'},
+  }},
 };
 
 // ═══════════════════════════════════════════
-//  SIMULATION STATE
+//  SIM STATE
 // ═══════════════════════════════════════════
-
-let state = null;
+let mainTimeline = null;
+let forks = [];          // [{timeline, label}]
+let activeTL = null;
 let initialEnergy = null;
-let trails = {};       // id → [{x,y}, ...]
-const TRAIL_LEN = 400;
+let trails = {};
+const TRAIL_LEN = 700;
 let playing = false;
 let stepsPerFrame = 20;
 let animId = null;
 
-function deepCopyBodies(bodies) {
-  const out = {};
-  for (const id in bodies) out[id] = { ...bodies[id] };
-  return out;
-}
-
-function loadPreset(name, btn) {
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-
-  const preset = PRESETS[name];
-  state = { bodies: deepCopyBodies(preset.bodies), step: 0, time: 0 };
+function initSim(bodiesObj) {
+  if (playing) stopPlay();
+  const state = {bodies: bodiesObj, step:0, time:0};
+  mainTimeline = new Timeline(state);
+  activeTL = mainTimeline;
+  forks = [];
   trails = {};
-  for (const id in state.bodies) trails[id] = [];
-  initialEnergy = totalEnergy(state.bodies);
-
+  for (const id in bodiesObj) trails[id] = [];
+  initialEnergy = totalE(bodiesObj);
   updateSidebar();
   renderFrame();
 }
 
+function loadPreset(name, btn) {
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  initSim(PRESETS[name].bodies);
+}
+
 function resetSim() {
   const active = document.querySelector('.preset-btn.active');
-  loadPreset(active ? active.dataset.preset : 'sunplanet', active);
+  if (active) loadPreset(active.dataset.preset, active);
+  else initSim(activeTL.states[0].bodies);
+}
+
+function stopPlay() {
+  playing = false;
+  document.getElementById('playbtn').textContent = '▶ PLAY';
+  if (animId) { cancelAnimationFrame(animId); animId=null; }
 }
 
 function togglePlay() {
   playing = !playing;
   document.getElementById('playbtn').textContent = playing ? '⏸ PAUSE' : '▶ PLAY';
   if (playing) loop();
-  else if (animId) cancelAnimationFrame(animId);
+  else if (animId) { cancelAnimationFrame(animId); animId=null; }
 }
 
 function stepOnce() {
-  advance(1);
+  if (playing) return;
+  advanceTL(1);
+  updateSidebar();
   renderFrame();
 }
 
-function updateSpeed(val) {
-  stepsPerFrame = parseInt(val);
-  document.getElementById('speed-val').textContent = val + '×';
+function updateSpeed(v) {
+  stepsPerFrame = parseInt(v);
+  document.getElementById('speed-val').textContent = v+'×';
 }
 
-function advance(n) {
-  for (let i = 0; i < n; i++) {
-    state = verletStep(state);
-    for (const id in state.bodies) {
-      const b = state.bodies[id];
-      trails[id].push({ x: b.x, y: b.y });
+function advanceTL(n) {
+  for (let i=0;i<n;i++) {
+    activeTL.step();
+    const b = activeTL.head().bodies;
+    for (const id in b) {
+      if (!trails[id]) trails[id]=[];
+      trails[id].push({x:b[id].x, y:b[id].y});
       if (trails[id].length > TRAIL_LEN) trails[id].shift();
     }
   }
 }
 
 function loop() {
-  advance(stepsPerFrame);
+  advanceTL(stepsPerFrame);
   updateSidebar();
   renderFrame();
   if (playing) animId = requestAnimationFrame(loop);
 }
 
+// ── REWIND: trim history back to halfway point ──
+function doRewind() {
+  if (!activeTL) return;
+  stopPlay();
+  const min = activeTL.minStep(), max = activeTL.maxStep();
+  if (max === min) { toast('Nothing to rewind'); return; }
+  const target = Math.floor((min + max) / 2);
+  activeTL.rewind(target);
+  rebuildTrails();
+  toast(`Rewound to step ${activeTL.head().step}`);
+  updateSidebar();
+  renderFrame();
+}
+
+// ── FORK: branch a new timeline from current head ──
+function doFork() {
+  if (!activeTL) return;
+  const step = activeTL.head().step;
+  const newTL = activeTL.fork(step);
+  if (!newTL) return;
+  const label = `Fork ${forks.length+1} @ step ${step}`;
+  newTL.label = label;
+  forks.push({timeline: newTL, label});
+  toast(`Forked: ${label}`);
+  updateSidebar();
+}
+
+function switchTo(tl) {
+  stopPlay();
+  activeTL = tl;
+  initialEnergy = totalE(tl.states[0].bodies);
+  rebuildTrails();
+  updateSidebar();
+  renderFrame();
+  toast(`Switched to: ${tl.label || 'main timeline'}`);
+}
+
+// ── TIMELINE SCRUB: click on bar ──
+function timelineClick(e) {
+  if (!activeTL) return;
+  const bar = document.getElementById('timeline-bar');
+  const rect = bar.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX-rect.left)/rect.width));
+  const min = activeTL.minStep(), max = activeTL.maxStep();
+  const target = Math.round(min + pct*(max-min));
+  activeTL.rewind(target);
+  rebuildTrails();
+  updateSidebar();
+  renderFrame();
+}
+
+function rebuildTrails() {
+  trails = {};
+  const states = activeTL.states;
+  const from = Math.max(0, states.length-TRAIL_LEN);
+  for (let i=from; i<states.length; i++) {
+    for (const id in states[i].bodies) {
+      if (!trails[id]) trails[id]=[];
+      trails[id].push({x:states[i].bodies[id].x, y:states[i].bodies[id].y});
+    }
+  }
+}
+
+// ── SIDEBAR ──
 function updateSidebar() {
-  document.getElementById('step-display').textContent = state.step.toLocaleString();
-  document.getElementById('time-display').textContent = state.time.toFixed(2);
+  if (!activeTL) return;
+  const head = activeTL.head();
+  document.getElementById('step-display').textContent = head.step.toLocaleString();
+  document.getElementById('time-display').textContent = head.time.toFixed(2);
+  document.getElementById('tl-history').textContent = activeTL.states.length;
+  document.getElementById('tl-head').textContent = head.step;
 
-  const E = totalEnergy(state.bodies);
-  const drift = initialEnergy !== 0 ? Math.abs((E - initialEnergy) / initialEnergy) : 0;
-  const p = totalMomentumMag(state.bodies);
+  const min=activeTL.minStep(), max=Math.max(min+1,activeTL.maxStep());
+  const pct = ((head.step-min)/(max-min)*100).toFixed(1);
+  document.getElementById('timeline-fill').style.width = pct+'%';
+  document.getElementById('timeline-head').style.left = pct+'%';
 
-  const energyEl = document.getElementById('diag-energy');
-  const driftEl  = document.getElementById('diag-drift');
-  energyEl.textContent = E.toFixed(4);
-  driftEl.textContent  = (drift * 100).toFixed(4) + '%';
-  driftEl.className = 'diag-val ' + (drift < 0.001 ? 'stable' : 'drifting');
-  document.getElementById('diag-momentum').textContent = p.toExponential(3);
+  const E = totalE(head.bodies);
+  const drift = initialEnergy!==0 ? Math.abs((E-initialEnergy)/initialEnergy) : 0;
+  document.getElementById('diag-energy').textContent = E.toFixed(4);
+  const dEl = document.getElementById('diag-drift');
+  dEl.textContent = (drift*100).toFixed(4)+'%';
+  dEl.className = 'diag-val '+(drift<0.001?'stable':'drifting');
+  document.getElementById('diag-momentum').textContent = momMag(head.bodies).toExponential(3);
+
+  // Body list
+  let bh='';
+  for (const id in head.bodies) {
+    const b=head.bodies[id];
+    bh+=`<div class="body-item"><div class="body-dot" style="background:${b.color}"></div><span class="body-name">${b.id}</span><span class="body-mass">m=${b.mass}</span></div>`;
+  }
+  document.getElementById('body-list').innerHTML = bh;
+
+  // Fork list
+  let fh='';
+  if (activeTL!==mainTimeline) {
+    fh+=`<div class="fork-item" style="opacity:.7"><div class="fork-dot" style="background:var(--accent)"></div><span class="fork-step-label">main timeline</span><button class="btn sm" onclick="switchTo(mainTimeline)">Switch</button></div>`;
+  } else {
+    fh+=`<div class="fork-item" style="opacity:.4"><div class="fork-dot" style="background:var(--accent)"></div><span class="fork-step-label" style="color:var(--green)">● main timeline</span></div>`;
+  }
+  forks.forEach((f,i)=>{
+    const active = activeTL===f.timeline;
+    fh+=`<div class="fork-item" ${active?'style="opacity:1"':'style="opacity:.7"'}><div class="fork-dot"></div><span class="fork-step-label" ${active?'style="color:var(--pink)"':''}>${f.label}${active?' ●':''}</span>${!active?`<button class="btn sm fork-col" onclick="switchTo(forks[${i}].timeline)">Switch</button>`:''}</div>`;
+  });
+  document.getElementById('fork-list').innerHTML = fh;
+
+  // Canvas fork label
+  const fl = document.getElementById('fork-label');
+  if (activeTL!==mainTimeline) { fl.textContent='⑂ '+activeTL.label; fl.style.display='block'; }
+  else fl.style.display='none';
 }
 
 // ═══════════════════════════════════════════
 //  RENDERING
 // ═══════════════════════════════════════════
-
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
+let camX=0, camY=0, camScale=18;
+let dragging=false, dragStart=null, camStart=null;
 
-let camX = 0, camY = 0, camScale = 18;
-let dragging = false, dragStart = null, camStart = null;
-
-function toScreen(wx, wy) {
-  return {
-    x: canvas.width/2  + (wx - camX) * camScale,
-    y: canvas.height/2 - (wy - camY) * camScale,
-  };
+function toScreen(wx,wy) {
+  return {x: canvas.width/2+(wx-camX)*camScale, y: canvas.height/2-(wy-camY)*camScale};
 }
 
 function resize() {
-  const wrap = document.getElementById('canvas-wrap');
-  canvas.width  = wrap.clientWidth  * devicePixelRatio;
-  canvas.height = wrap.clientHeight * devicePixelRatio;
-  canvas.style.width  = wrap.clientWidth  + 'px';
-  canvas.style.height = wrap.clientHeight + 'px';
+  const wrap=document.getElementById('canvas-wrap');
+  canvas.width=wrap.clientWidth*devicePixelRatio;
+  canvas.height=wrap.clientHeight*devicePixelRatio;
+  canvas.style.width=wrap.clientWidth+'px';
+  canvas.style.height=wrap.clientHeight+'px';
   renderFrame();
 }
 
 function renderFrame() {
-  if (!state) return;
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
+  if (!activeTL) return;
+  const head=activeTL.head();
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
 
-  // Faint grid
-  ctx.strokeStyle = '#0d1a2e';
-  ctx.lineWidth = 0.5;
-  const gridStep = camScale * 5;
-  const ox = (W/2 - camX * camScale) % gridStep;
-  const oy = (H/2 + camY * camScale) % gridStep;
-  for (let x = ox; x < W; x += gridStep) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-  for (let y = oy; y < H; y += gridStep) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  // Grid
+  ctx.strokeStyle='#0d1a2e'; ctx.lineWidth=0.5;
+  const gs=camScale*5;
+  const ox=(W/2-camX*camScale)%gs, oy=(H/2+camY*camScale)%gs;
+  for(let x=ox;x<W;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=oy;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
-  // Crosshair at origin
-  const o = toScreen(0,0);
-  ctx.strokeStyle = '#1a2d4a';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(o.x-10,o.y); ctx.lineTo(o.x+10,o.y); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(o.x,o.y-10); ctx.lineTo(o.x,o.y+10); ctx.stroke();
+  // Origin
+  const o=toScreen(0,0);
+  ctx.strokeStyle='#1a2d4a'; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(o.x-10,o.y);ctx.lineTo(o.x+10,o.y);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(o.x,o.y-10);ctx.lineTo(o.x,o.y+10);ctx.stroke();
 
   // Trails
-  for (const id in trails) {
-    const trail = trails[id];
-    if (trail.length < 2) continue;
-    const color = state.bodies[id]?.color || '#ffffff';
-    for (let i = 1; i < trail.length; i++) {
-      const alpha = (i / trail.length) * 0.55;
-      const p1 = toScreen(trail[i-1].x, trail[i-1].y);
-      const p2 = toScreen(trail[i].x,   trail[i].y);
-      ctx.strokeStyle = color + Math.floor(alpha*255).toString(16).padStart(2,'0');
-      ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+  for(const id in trails){
+    const t=trails[id]; if(t.length<2) continue;
+    const color=head.bodies[id]?.color||'#fff';
+    for(let i=1;i<t.length;i++){
+      const a=(i/t.length)*0.6;
+      const p1=toScreen(t[i-1].x,t[i-1].y), p2=toScreen(t[i].x,t[i].y);
+      ctx.strokeStyle=color+Math.floor(a*255).toString(16).padStart(2,'0');
+      ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
     }
   }
 
   // Bodies
-  for (const id in state.bodies) {
-    const b = state.bodies[id];
-    const s = toScreen(b.x, b.y);
-    const r = Math.cbrt(b.mass) * 1.2;
-    const sr = Math.max(3, r * camScale * 0.18);
-
-    // Glow
-    const grd = ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,sr*3);
-    grd.addColorStop(0, b.color + '55');
-    grd.addColorStop(1, b.color + '00');
-    ctx.fillStyle = grd;
-    ctx.beginPath(); ctx.arc(s.x,s.y,sr*3,0,Math.PI*2); ctx.fill();
-
-    // Body
-    ctx.fillStyle = b.color;
-    ctx.beginPath(); ctx.arc(s.x,s.y,sr,0,Math.PI*2); ctx.fill();
-
-    // Label
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = `${Math.round(10 * devicePixelRatio)}px Space Mono, monospace`;
-    ctx.fillText(b.id, s.x + sr + 4, s.y - sr - 4);
+  for(const id in head.bodies){
+    const b=head.bodies[id];
+    const s=toScreen(b.x,b.y);
+    const sr=Math.max(3,Math.cbrt(b.mass)*1.2*camScale*0.18);
+    const grd=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,sr*3);
+    grd.addColorStop(0,b.color+'55'); grd.addColorStop(1,b.color+'00');
+    ctx.fillStyle=grd; ctx.beginPath();ctx.arc(s.x,s.y,sr*3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=b.color; ctx.beginPath();ctx.arc(s.x,s.y,sr,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#e2e8f0';
+    ctx.font=`${Math.round(10*devicePixelRatio)}px Space Mono,monospace`;
+    ctx.fillText(b.id, s.x+sr+4, s.y-sr-4);
   }
-
-  // Build body list once per render
-  renderBodyList();
 }
 
-function renderBodyList() {
-  const el = document.getElementById('body-list');
-  let html = '';
-  for (const id in state.bodies) {
-    const b = state.bodies[id];
-    html += `<div class="body-item">
-      <div class="body-dot" style="background:${b.color}"></div>
-      <span class="body-name">${b.id}</span>
-      <span class="body-mass">m=${b.mass}</span>
-    </div>`;
+// Mouse / touch
+canvas.addEventListener('wheel', e=>{e.preventDefault();camScale*=e.deltaY<0?1.1:0.9;renderFrame();},{passive:false});
+canvas.addEventListener('mousedown',e=>{dragging=true;dragStart={x:e.clientX,y:e.clientY};camStart={x:camX,y:camY};});
+canvas.addEventListener('mousemove',e=>{if(!dragging)return;camX=camStart.x-(e.clientX-dragStart.x)/camScale;camY=camStart.y+(e.clientY-dragStart.y)/camScale;renderFrame();});
+canvas.addEventListener('mouseup',()=>dragging=false);
+canvas.addEventListener('mouseleave',()=>dragging=false);
+canvas.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;dragging=true;dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY};camStart={x:camX,y:camY};},{passive:true});
+canvas.addEventListener('touchmove',e=>{if(!dragging||e.touches.length!==1)return;camX=camStart.x-(e.touches[0].clientX-dragStart.x)/camScale;camY=camStart.y+(e.touches[0].clientY-dragStart.y)/camScale;renderFrame();},{passive:true});
+canvas.addEventListener('touchend',()=>dragging=false);
+window.addEventListener('resize',resize);
+
+// ═══════════════════════════════════════════
+//  CUSTOM SETUP MODAL
+// ═══════════════════════════════════════════
+let customRows = [];
+
+function openCustomModal() {
+  customRows = [];
+  if (activeTL) {
+    const b = activeTL.states[0].bodies;
+    for (const id in b) { const bo=b[id]; customRows.push({id:bo.id,mass:bo.mass,x:bo.x,y:bo.y,vx:bo.vx,vy:bo.vy,color:bo.color}); }
   }
-  el.innerHTML = html;
+  if (!customRows.length) {
+    customRows.push({id:'star',  mass:1000,x:0, y:0,vx:0,vy:0, color:'#f59e0b'});
+    customRows.push({id:'planet',mass:1,   x:10,y:0,vx:0,vy:10,color:'#3b82f6'});
+  }
+  renderCustomRows();
+  calcOrbit();
+  document.getElementById('custom-modal').classList.add('open');
 }
 
-// ═══════════════════════════════════════════
-//  MOUSE / TOUCH INTERACTION
-// ═══════════════════════════════════════════
+function closeCustomModal() {
+  document.getElementById('custom-modal').classList.remove('open');
+}
 
-canvas.addEventListener('wheel', e => {
-  e.preventDefault();
-  const factor = e.deltaY < 0 ? 1.1 : 0.9;
-  camScale *= factor;
-  renderFrame();
-}, { passive: false });
+function renderCustomRows() {
+  const tbody = document.getElementById('custom-body-rows');
+  tbody.innerHTML='';
+  customRows.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input type="color" class="color-swatch" value="${r.color}" onchange="customRows[${i}].color=this.value"></td>
+      <td><input class="ci" style="width:68px" value="${r.id}" oninput="customRows[${i}].id=this.value"></td>
+      <td><input class="ci" style="width:60px" type="number" value="${r.mass}" step="any" oninput="customRows[${i}].mass=+this.value||1"></td>
+      <td><input class="ci" style="width:54px" type="number" value="${r.x}" step="any" oninput="customRows[${i}].x=+this.value"></td>
+      <td><input class="ci" style="width:54px" type="number" value="${r.y}" step="any" oninput="customRows[${i}].y=+this.value"></td>
+      <td><input class="ci" style="width:54px" type="number" value="${r.vx}" step="any" oninput="customRows[${i}].vx=+this.value"></td>
+      <td><input class="ci" style="width:54px" type="number" value="${r.vy}" step="any" oninput="customRows[${i}].vy=+this.value"></td>
+      <td><button class="btn danger sm" onclick="removeCustomRow(${i})">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
 
-canvas.addEventListener('mousedown', e => {
-  dragging = true;
-  dragStart = { x: e.clientX, y: e.clientY };
-  camStart  = { x: camX, y: camY };
+function addCustomRow() {
+  customRows.push({id:'body'+(customRows.length+1), mass:1, x:0, y:0, vx:0, vy:0, color:PALETTE[customRows.length%PALETTE.length]});
+  renderCustomRows();
+}
+
+function removeCustomRow(i) {
+  customRows.splice(i,1);
+  renderCustomRows();
+}
+
+function launchCustom() {
+  if (!customRows.length) { alert('Add at least one body.'); return; }
+  const ids = customRows.map(r=>r.id.trim());
+  if (new Set(ids).size!==ids.length) { alert('Body IDs must be unique.'); return; }
+  const bodies={};
+  customRows.forEach(r=>{ const id=r.id.trim()||'body'; bodies[id]={id,mass:r.mass,x:r.x,y:r.y,vx:r.vx,vy:r.vy,color:r.color}; });
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  closeCustomModal();
+  initSim(bodies);
+  toast('Custom simulation launched');
+}
+
+// ── Orbital velocity calculator ──
+function calcOrbit() {
+  const M=parseFloat(document.getElementById('orb-mass').value);
+  const r=parseFloat(document.getElementById('orb-radius').value);
+  const el=document.getElementById('orbit-result');
+  if (!isFinite(M)||!isFinite(r)||M<=0||r<=0) { el.classList.remove('show'); return; }
+  const v=Math.sqrt(G*M/r);
+  document.getElementById('orbit-val').textContent=`v = ${v.toFixed(6)}`;
+  document.getElementById('orbit-note').innerHTML=
+    `Place orbiting body at distance r=${r} from the central body.<br>`+
+    `If body is at <b style="color:var(--accent2)">x = +r, y = 0</b> from centre → set <b style="color:var(--accent2)">Vx = 0, Vy = ${v.toFixed(6)}</b><br>`+
+    `If body is at <b style="color:var(--accent2)">x = 0, y = +r</b> from centre → set <b style="color:var(--accent2)">Vx = −${v.toFixed(6)}, Vy = 0</b>`;
+  el.classList.add('show');
+}
+
+// ── Modal close on overlay click ──
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click',e=>{ if(e.target===el) el.classList.remove('open'); });
 });
-canvas.addEventListener('mousemove', e => {
-  if (!dragging) return;
-  const dx = (e.clientX - dragStart.x) / camScale;
-  const dy = (e.clientY - dragStart.y) / camScale;
-  camX = camStart.x - dx;
-  camY = camStart.y + dy;
-  renderFrame();
-});
-canvas.addEventListener('mouseup', () => { dragging = false; });
-canvas.addEventListener('mouseleave', () => { dragging = false; });
 
-// Touch
-canvas.addEventListener('touchstart', e => {
-  if (e.touches.length === 1) {
-    dragging = true;
-    dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    camStart  = { x: camX, y: camY };
-  }
-}, { passive: true });
-canvas.addEventListener('touchmove', e => {
-  if (!dragging || e.touches.length !== 1) return;
-  const dx = (e.touches[0].clientX - dragStart.x) / camScale;
-  const dy = (e.touches[0].clientY - dragStart.y) / camScale;
-  camX = camStart.x - dx;
-  camY = camStart.y + dy;
-  renderFrame();
-}, { passive: true });
-canvas.addEventListener('touchend', () => { dragging = false; });
+// ── Toast ──
+let toastTimer=null;
+function toast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
 
-window.addEventListener('resize', resize);
-
-// ═══════════════════════════════════════════
-//  BOOT
-// ═══════════════════════════════════════════
-
+// ── Boot ──
 resize();
 loadPreset('sunplanet', document.querySelector('.preset-btn[data-preset="sunplanet"]'));
 </script>
